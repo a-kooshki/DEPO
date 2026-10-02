@@ -1159,29 +1159,33 @@ export default function StoneInventoryApp() {
         <td style="${bodyCell}">${index + 1}</td>
         <td style="${bodyCell};font-weight:700">${escapeHtml(coup.coupNumber)}</td>
         <td style="${bodyCell}">${escapeHtml(coup.type)}</td>
+        <td style="${bodyCell}">${escapeHtml(coupFormatLabel(coup.coupFormat))}</td>
         <td style="${bodyCell};font-weight:700">${num(coup.approxWeight)}</td>
       </tr>`).join('');
 
     const html = `
-      <div dir="ltr" style="font-family:'Vazirmatn',Tahoma,Arial,sans-serif;color:#111">
-        ${printDocumentHeader(`Waybill ${waybill.waybillNumber}`, `Date: ${isoToJalaliString(waybill.date)}`, settings.showLogoInPdf ? await loadLogoDataUrl() : null, settings.showQrInPdf ? await loadQrDataUrl() : null, fontScale)}
+      <div dir="rtl" style="font-family:'Vazirmatn',Tahoma,Arial,sans-serif;color:#111">
+        ${printDocumentHeader(`حواله شماره ${waybill.waybillNumber}`, `تاریخ: ${isoToJalaliString(waybill.date)}`, settings.showLogoInPdf ? await loadLogoDataUrl() : null, settings.showQrInPdf ? await loadQrDataUrl() : null, fontScale)}
         ${metaGridHtml([
-          ['Waybill No.', waybill.waybillNumber],
-          ['Date', isoToJalaliString(waybill.date)],
-          ['Driver', waybill.driverName],
-          ['Plate No.', waybill.plateNumber],
-          ['Mine', waybill.mineName],
-          ['Contract No.', waybill.contractNumber],
-          ['Total Weight (ton)', num(waybill.totalWeight)],
+          ['شماره حواله', waybill.waybillNumber],
+          ['تاریخ', isoToJalaliString(waybill.date)],
+          ['نام راننده', waybill.driverName || '—'],
+          ['شماره پلاک', waybill.plateNumber || '—'],
+          ['معدن', waybill.mineName || '—'],
+          ['شماره قرارداد', waybill.contractNumber || '—'],
+          ['وزن کل (تن)', num(waybill.totalWeight)],
+          ['تعداد کوپ', waybill.coups.length],
+          ['فی کرایه (ریال/تن)', formatRial(waybill.freightPerTon || 0)],
+          ['کرایه حواله (ریال)', formatRial(waybill.freightAmount || 0)],
         ], fontScale)}
-        <table style="width:100%;border-collapse:collapse">
+        <table style="width:100%;border-collapse:collapse;text-align:center">
           <thead><tr>
-            <th style="${headCell}">#</th><th style="${headCell}">Coup No.</th><th style="${headCell}">Type</th><th style="${headCell}">Approx. Weight (ton)</th>
+            <th style="${headCell}">ردیف</th><th style="${headCell}">شماره کوپ</th><th style="${headCell}">نوع سنگ</th><th style="${headCell}">فرمت</th><th style="${headCell}">وزن تقریبی (تن)</th>
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
           <tfoot><tr>
-            <td colspan="3" style="${bodyCell};font-weight:800;background:#eee">Total</td>
-            <td style="${bodyCell};font-weight:800;background:#eee">${num(waybill.coups.reduce((s, c) => s + Number(c.approxWeight || 0), 0))}</td>
+            <td colspan="4" style="${bodyCell};font-weight:800;background:#eee">جمع وزن کوپ‌ها</td>
+            <td style="${bodyCell};font-weight:800;background:#eee">${num(waybill.coups.reduce((sum, coup) => sum + Number(coup.approxWeight || 0), 0))}</td>
           </tr></tfoot>
         </table>
       </div>
@@ -1191,22 +1195,30 @@ export default function StoneInventoryApp() {
 
   const printWaybillReport = async () => {
     if (filteredWaybills.length === 0) { notify('حواله‌ای برای چاپ وجود ندارد.', 'error'); return; }
-    const rows = filteredWaybills.map((waybill) => [
-      waybill.waybillNumber, isoToJalaliString(waybill.date), waybill.contractNumber || '—',
-      num(waybill.totalWeight), formatRial(waybill.freightPerTon || 0), formatRial(waybill.freightAmount || 0),
-    ]);
+    const fontScale = settings.pdfFontScale;
     const totalWeight = filteredWaybills.reduce((sum, waybill) => sum + Number(waybill.totalWeight || 0), 0);
     const totalFreight = filteredWaybills.reduce((sum, waybill) => sum + Number(waybill.freightAmount || 0), 0);
-    const html = buildPrintHtml({
-      title: 'Waybill Report',
-      subtitle: `${filteredWaybills.length} waybills — ${num(totalWeight)} ton — freight ${formatRial(totalFreight)} Rial`,
-      headers: ['Waybill', 'Date', 'Contract', 'Weight (ton)', 'Freight / ton', 'Total Freight'],
-      rows,
-      logoDataUrl: settings.showLogoInPdf ? await loadLogoDataUrl() : null,
-      qrDataUrl: settings.showQrInPdf ? await loadQrDataUrl() : null,
-      fontScale: settings.pdfFontScale,
-      headerText: settings.pdfHeaderText,
-    });
+    const boxesHtml = filteredWaybills.map((waybill) => `
+      <section style="border:2px solid #111;border-radius:6px;padding:10px;margin-bottom:12px;page-break-inside:avoid;break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:8px">
+          <strong style="font-size:${Math.round(15 * fontScale)}px">حواله شماره ${escapeHtml(waybill.waybillNumber)}</strong>
+          <span style="font-size:${Math.round(11 * fontScale)}px">تاریخ: ${escapeHtml(isoToJalaliString(waybill.date))}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:${Math.round(11 * fontScale)}px">
+          <div><b>راننده:</b> ${escapeHtml(waybill.driverName || '—')}</div>
+          <div><b>پلاک:</b> ${escapeHtml(waybill.plateNumber || '—')}</div>
+          <div><b>قرارداد:</b> ${escapeHtml(waybill.contractNumber || '—')}</div>
+          <div><b>وزن کل:</b> ${num(waybill.totalWeight)} تن</div>
+          <div><b>تعداد کوپ:</b> ${waybill.coups.length}</div>
+          <div><b>فی کرایه:</b> ${formatRial(waybill.freightPerTon || 0)} ریال/تن</div>
+          <div style="grid-column:span 3;font-size:${Math.round(13 * fontScale)}px"><b>کرایه حواله:</b> ${formatRial(waybill.freightAmount || 0)} ریال</div>
+        </div>
+      </section>`).join('');
+    const html = `
+      <div dir="rtl" style="font-family:'Vazirmatn',Tahoma,Arial,sans-serif;color:#111">
+        ${printDocumentHeader('گزارش حواله‌ها', `${filteredWaybills.length} حواله · وزن کل ${num(totalWeight)} تن · جمع کرایه ${formatRial(totalFreight)} ریال`, settings.showLogoInPdf ? await loadLogoDataUrl() : null, settings.showQrInPdf ? await loadQrDataUrl() : null, fontScale)}
+        ${boxesHtml}
+      </div>`;
     printDocument(html, `Waybill_Report_${new Date().toISOString().slice(0, 10)}`);
   };
 
