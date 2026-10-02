@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Light "warehouse console" palette: paper-white surfaces on a cool grey desk,
+  with a deep slate-teal for primary actions and quarry-amber reserved for
+  pallet identity. Numbers are always tabular so columns line up when scanned.
+*/
+:root {
+  --bg: #f1f3f5;
+  --surface: #ffffff;
+  --surface-sunken: #f7f8fa;
+  --surface-accent: #eef4f5;
+  --border: #dde1e6;
+  --border-strong: #c6ccd3;
+  --text: #16191d;
+  --text-muted: #5d666f;
+  --text-subtle: #858d96;
+  --primary: #1f5560;
+  --primary-hover: #17454e;
+  --primary-soft: #e3eef0;
+  --accent: #9a6614;
+  --accent-soft: #fbf1df;
+  --danger: #a6231b;
+  --danger-soft: #fceceb;
+  --success: #1f6b45;
+  --success-soft: #e6f3ec;
+  --focus: #2f7c8c;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Vazirmatn', 'Segoe UI', 'Tahoma', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  direction: rtl;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Digits and measurements must stay column-aligned in every table. */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* One consistent, clearly visible focus ring for keyboard users. */
+:where(button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+input,
+select,
+textarea,
+button {
+  font-size: 14px;
+}
+
+/* Spinner arrows steal width from narrow numeric cells in the entry grid. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-sunken);
+}
+::-webkit-scrollbar-thumb {
+  background: #c3c9d0;
+  border: 3px solid var(--surface-sunken);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a9b1ba;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
