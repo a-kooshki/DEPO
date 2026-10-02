@@ -80,6 +80,7 @@ export default function InventoryTab() {
   resetFilters,
   activeFilterCount,
   filteredStones,
+  matchingStoneIds,
   palletGroups,
   searchTotals,
   inventorySummary,
@@ -281,8 +282,8 @@ export default function InventoryTab() {
     <>
       <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <Stat label="پالت‌های نتیجه" value={searchTotals.pallets} />
-              <Stat label="ردیف‌ها" value={filteredStones.length} />
+              <Stat label="پالت‌های نمایش‌داده‌شده" value={searchTotals.pallets} />
+              <Stat label="ردیف‌های مطابق فیلتر" value={filteredStones.length} />
               <Stat label="تعداد قطعات" value={searchTotals.pieces} />
               <Stat label="متراژ نتایج" value={num(searchTotals.area)} unit="m²" />
             </div>
@@ -383,6 +384,13 @@ export default function InventoryTab() {
             )}
 
             <div className="space-y-3">
+              {activeFilterCount > 0 && palletGroups.length > 0 && (
+                <div className="flex items-center gap-2 px-1 text-xs text-[var(--text-muted)]">
+                  <span className="inline-block h-3 w-3 rounded-sm bg-[var(--accent-soft)] ring-1 ring-[#d8b77a]" />
+                  ردیف‌های دارای پس‌زمینهٔ طلایی با فیلترهای انتخاب‌شده مطابقت دارند؛ سایر ردیف‌های همان پالت نیز برای مشاهدهٔ کامل پالت نمایش داده می‌شوند.
+                </div>
+              )}
+
               {palletGroups.length > 0 && (
                 <div className="flex items-center justify-between px-1">
                   <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-[var(--text-muted)]">
@@ -442,8 +450,10 @@ export default function InventoryTab() {
                             </tr>
                           </thead>
                           <tbody>
-                            {group.stones.map((stone) => (
-                              <tr key={stone.id} className="border-t border-[var(--border)] hover:bg-[var(--surface-sunken)]">
+                            {group.stones.map((stone) => {
+                              const matchesFilter = activeFilterCount > 0 && matchingStoneIds.has(stone.id);
+                              return (
+                              <tr key={stone.id} className={`border-t border-[var(--border)] ${matchesFilter ? 'bg-[var(--accent-soft)] hover:bg-[#f7e8c9]' : 'hover:bg-[var(--surface-sunken)]'}`}>
                                 <td className="px-3 py-1.5 text-center">{stone.type}</td>
                                 <td className="num px-3 py-1.5 text-center">{stone.cutCode}</td>
                                 <td className="px-3 py-1.5 text-center">{stone.grade || '—'}</td>
@@ -454,7 +464,8 @@ export default function InventoryTab() {
                                 <td className="num px-3 py-1.5 text-center font-semibold">{num(stone.area)}</td>
                                 <td className="px-3 py-1.5 text-center text-xs text-[var(--text-muted)]">{stone.notes || '—'}</td>
                               </tr>
-                            ))}
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

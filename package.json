@@ -1,5 +1,5 @@
 {
-  "name": "stonko",
+  "name": "depo",
   "version": "1.0.0",
   "private": true,
   "main": "electron/main.cjs",
@@ -33,8 +33,8 @@
     "autoprefixer": "^10.4.20"
   },
   "build": {
-    "appId": "com.stonko.app",
-    "productName": "STONKO",
+    "appId": "com.depo.app",
+    "productName": "DEPO",
     "files": [
       "dist/**/*",
       "electron/**/*",
@@ -73,6 +73,6 @@
       "icon": "build/icon.icns"
     }
   },
-  "description": "STONKO — stone factory management (quarry contracts, waybills, cutting, pallets, sales)",
-  "author": "STONKO Team"
+  "description": "DEPO — stone factory management (quarry contracts, waybills, cutting, pallets, sales)",
+  "author": "DEPO Team"
 }

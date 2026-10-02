@@ -282,7 +282,7 @@ function createWindow() {
     show: false,
     backgroundColor: '#F4F5F7',
     icon: resolveWindowIcon(),
-    title: 'STONKO',
+    title: 'DEPO',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -520,12 +520,12 @@ function createTray() {
   const iconPath = path.join(__dirname, '../build/icon.png');
   const image = fsSync.existsSync(iconPath) ? nativeImage.createFromPath(iconPath) : nativeImage.createEmpty();
   tray = new Tray(image.isEmpty() ? nativeImage.createEmpty() : image.resize({ width: 16, height: 16 }));
-  tray.setToolTip('STONKO — در حال اجرا در پس‌زمینه');
+  tray.setToolTip('DEPO — در حال اجرا در پس‌زمینه');
 
   const rebuildMenu = () => {
     tray.setContextMenu(Menu.buildFromTemplate([
       {
-        label: 'باز کردن STONKO',
+        label: 'باز کردن DEPO',
         click: () => {
           if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); } else { createWindow(); }
         },
@@ -612,7 +612,7 @@ function buildMenu() {
           click: () => dialog.showMessageBox(mainWindow, {
             type: 'info',
             title: 'درباره برنامه',
-            message: 'STONKO',
+            message: 'DEPO',
             detail: `نسخه ${app.getVersion()}\nالکترون ${process.versions.electron}`,
             buttons: ['باشه'],
           }),

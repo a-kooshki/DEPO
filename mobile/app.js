@@ -6,7 +6,7 @@ import {
 } from '/shared/domain.js';
 import { todayJalaliString, jalaliStringToIso, normalizeJalaliInput } from '/shared/jalali.js';
 
-const OPERATOR_KEY = 'stonko-mobile-operator';
+const OPERATOR_KEY = 'depo-mobile-operator';
 const root = document.getElementById('app');
 
 /* ------------------------------------------------------------------ */
@@ -118,7 +118,7 @@ function showToast(message, tone) {
 function renderOperatorPicker() {
   const operators = state.reference?.operators || [];
   return h('div', { class: 'picker-screen' }, [
-    h('h1', { text: 'STONKO' }),
+    h('h1', { text: 'DEPO' }),
     h('p', { text: 'برای ادامه، نام خود را انتخاب کنید.' }),
     operators.length === 0
       ? h('div', { class: 'empty-note', text: 'کاربری تعریف نشده است. ابتدا از برنامه‌ی اصلی، در تب «تنظیمات»، یک کاربر اضافه کنید.' })
@@ -564,7 +564,7 @@ function render() {
 
   if (state.loadError) {
     root.appendChild(h('div', { class: 'picker-screen' }, [
-      h('h1', { text: 'STONKO' }),
+      h('h1', { text: 'DEPO' }),
       h('p', { text: state.loadError }),
       h('button', { class: 'primary', text: 'تلاش دوباره', onclick: loadReference }),
     ]));
@@ -582,7 +582,7 @@ function render() {
   }
 
   const topbar = h('div', { class: 'topbar' }, [
-    h('span', { class: 'brand', text: 'STONKO' }),
+    h('span', { class: 'brand', text: 'DEPO' }),
     h('span', { class: 'operator' }, [
       h('span', { text: state.operator }),
       h('button', { text: 'تغییر کاربر', onclick: () => { state.operator = ''; localStorage.removeItem(OPERATOR_KEY); render(); } }),

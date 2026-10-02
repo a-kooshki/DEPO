@@ -766,7 +766,21 @@ export default function StoneInventoryApp() {
       .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
   }, [stones, filters, getInvoice]);
 
-  const palletGroups = useMemo(() => groupByPallet(filteredStones), [filteredStones]);
+  // A filter identifies relevant rows, but the inventory view must show the
+  // entire pallet around every match. This keeps the context of a matching slab
+  // visible while `matchingStoneIds` lets the UI mark the exact matching rows.
+  const matchingStoneIds = useMemo(() => new Set(filteredStones.map((stone) => stone.id)), [filteredStones]);
+  const visiblePalletStones = useMemo(() => {
+    if (activeFilterCount === 0) return filteredStones;
+
+    const matchingPallets = new Set(filteredStones.map((stone) => stone.palletNumber));
+    return stones.filter((stone) => {
+      if (!matchingPallets.has(stone.palletNumber)) return false;
+      return filters.showSold || !getInvoice(stone.palletNumber);
+    });
+  }, [activeFilterCount, filteredStones, stones, filters.showSold, getInvoice]);
+
+  const palletGroups = useMemo(() => groupByPallet(visiblePalletStones), [visiblePalletStones]);
 
   const searchTotals = useMemo(() => ({
     area: filteredStones.reduce((sum, s) => sum + (Number(s.area) || 0), 0),
@@ -2021,6 +2035,7 @@ export default function StoneInventoryApp() {
     resetFilters,
     activeFilterCount,
     filteredStones,
+    matchingStoneIds,
     palletGroups,
     searchTotals,
     inventorySummary,
@@ -2232,7 +2247,7 @@ export default function StoneInventoryApp() {
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--surface)]">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-6 py-3">
           <div className="flex items-baseline gap-3">
-            <h1 className="text-base font-semibold tracking-wide">STONKO<span className="mr-2 text-xs font-normal text-[var(--text-muted)]">مدیریت انبار و فراوری سنگ</span></h1>
+            <h1 className="text-base font-semibold tracking-wide">DEPO<span className="mr-2 text-xs font-normal text-[var(--text-muted)]">مدیریت انبار و فراوری سنگ</span></h1>
             <span className="num text-xs text-[var(--text-muted)]">
               {totalStock.pallets} پالت در انبار · {num(totalStock.area)} m²
             </span>
