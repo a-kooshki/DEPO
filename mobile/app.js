@@ -342,6 +342,7 @@ function renderCuttingTab() {
 
   const headerCard = h('div', { class: 'card' }, [
     h('h2', { text: 'ثبت برش' }),
+    h('p', { class: 'hint', text: 'ابتدا مشخصات برش و زمان پایان آن را ثبت کنید؛ سپس برای ثبت ابعاد اسلب‌ها به تب «ثبت تخلیه» بروید.' }),
     h('div', { class: 'field' }, [
       h('label', { text: 'تاریخ' }),
       h('input', {
@@ -397,6 +398,25 @@ function renderCuttingTab() {
       : null,
   ]);
 
+  const timingCard = h('div', { class: 'card' }, [
+    h('h2', { text: 'پایان برش' }),
+    h('div', { class: 'grid-2' }, [
+      h('div', { class: 'field' }, [
+        h('label', { text: 'تاریخ پایان برش' }),
+        h('input', { value: cuttingForm.end.date, placeholder: '1403/07/25', oninput: (e) => { cuttingForm.end.date = normalizeJalaliInput(e.target.value); e.target.value = cuttingForm.end.date; } }),
+      ]),
+      h('div', { class: 'field' }, [
+        h('label', { text: 'ساعت پایان برش' }),
+        h('input', { type: 'time', value: cuttingForm.end.time, oninput: (e) => { cuttingForm.end.time = e.target.value; } }),
+      ]),
+    ]),
+    h('button', { class: 'primary', text: 'ادامه به ثبت تخلیه', onclick: continueToUnloading }),
+  ]);
+
+  return h('div', {}, [headerCard, timingCard]);
+}
+
+function renderUnloadingTab() {
   const slabCards = cuttingForm.slabs.map((row, index) => h('div', { class: 'row-card' }, [
     h('div', { class: 'row-head' }, [
       h('span', { class: 'row-spec', text: `ردیف ${index + 1}` }),
@@ -431,40 +451,29 @@ function renderCuttingTab() {
     h('div', { class: 'row-area', text: `مساحت: ${num(slabArea(row))} m²` }),
   ]));
 
-  const totalArea = cuttingForm.slabs.filter((r) => !slabRowIsEmpty(r)).reduce((sum, r) => sum + slabArea(r), 0);
-
-  const timingCard = h('div', { class: 'card' }, [
-    h('h2', { text: 'زمان‌بندی' }),
-    h('p', { class: 'hint', text: 'شروع برش و ورود به خط فراوری خودکار ثبت می‌شوند. پایان برش و خروج از خط فراوری را خودتان وارد کنید.' }),
-    h('div', { class: 'grid-2' }, [
-      h('div', { class: 'field' }, [
-        h('label', { text: 'تاریخ پایان برش' }),
-        h('input', { value: cuttingForm.end.date, placeholder: '1403/07/25', oninput: (e) => { cuttingForm.end.date = normalizeJalaliInput(e.target.value); e.target.value = cuttingForm.end.date; } }),
-      ]),
-      h('div', { class: 'field' }, [
-        h('label', { text: 'ساعت پایان برش' }),
-        h('input', { type: 'time', value: cuttingForm.end.time, oninput: (e) => { cuttingForm.end.time = e.target.value; } }),
-      ]),
-    ]),
-    h('div', { class: 'grid-2' }, [
-      h('div', { class: 'field' }, [
-        h('label', { text: 'تاریخ خروج از خط' }),
-        h('input', { value: cuttingForm.exit.date, placeholder: '1403/07/25', oninput: (e) => { cuttingForm.exit.date = normalizeJalaliInput(e.target.value); e.target.value = cuttingForm.exit.date; } }),
-      ]),
-      h('div', { class: 'field' }, [
-        h('label', { text: 'ساعت خروج از خط' }),
-        h('input', { type: 'time', value: cuttingForm.exit.time, oninput: (e) => { cuttingForm.exit.time = e.target.value; } }),
-      ]),
-    ]),
-  ]);
-
+  const totalArea = cuttingForm.slabs.filter((row) => !slabRowIsEmpty(row)).reduce((sum, row) => sum + slabArea(row), 0);
   const slabsCard = h('div', { class: 'card' }, [
-    h('h2', { text: 'ابعاد و تعداد' }),
+    h('h2', { text: 'ثبت تخلیه' }),
+    h('p', { class: 'hint', text: `کوپ: ${cuttingForm.coupNumber || 'ثبت نشده'} — ابعاد و تعداد اسلب‌های تخلیه‌شده را وارد کنید.` }),
     ...slabCards,
     h('button', { class: 'add-row-btn', text: '+ افزودن ردیف', onclick: () => { cuttingForm.slabs.push(createSlabRow()); renderCuttingTabInPlace(); } }),
     h('p', { class: 'hint', text: `مساحت کل: ${num(totalArea)} m²` }),
+  ]);
+
+  const timingCard = h('div', { class: 'card' }, [
+    h('h2', { text: 'پایان تخلیه' }),
+    h('div', { class: 'grid-2' }, [
+      h('div', { class: 'field' }, [
+        h('label', { text: 'تاریخ پایان تخلیه' }),
+        h('input', { value: cuttingForm.exit.date, placeholder: '1403/07/25', oninput: (e) => { cuttingForm.exit.date = normalizeJalaliInput(e.target.value); e.target.value = cuttingForm.exit.date; } }),
+      ]),
+      h('div', { class: 'field' }, [
+        h('label', { text: 'ساعت پایان تخلیه' }),
+        h('input', { type: 'time', value: cuttingForm.exit.time, oninput: (e) => { cuttingForm.exit.time = e.target.value; } }),
+      ]),
+    ]),
     h('button', {
-      class: 'primary', text: cuttingForm.submitting ? 'در حال ثبت…' : 'ثبت فرم برش', disabled: cuttingForm.submitting,
+      class: 'primary', text: cuttingForm.submitting ? 'در حال ثبت…' : 'ثبت فرم برش و تخلیه', disabled: cuttingForm.submitting,
       onclick: submitCuttingForm,
     }),
   ]);
@@ -476,12 +485,41 @@ function renderCuttingTab() {
     ])
     : null;
 
-  return h('div', {}, [headerCard, slabsCard, timingCard, lastSavedCard]);
+  return h('div', {}, [slabsCard, timingCard, lastSavedCard]);
 }
 
 function renderCuttingTabInPlace() {
   const container = document.getElementById('tab-content');
-  if (container) container.replaceChildren(renderCuttingTab());
+  if (container) container.replaceChildren(state.tab === 'unloading' ? renderUnloadingTab() : renderCuttingTab());
+}
+
+function getCuttingSetup() {
+  const isoDate = jalaliStringToIso(cuttingForm.date);
+  if (!isoDate) { showToast('تاریخ برش معتبر نیست.', 'error'); return null; }
+  if (!cuttingForm.coupNumber.trim()) { showToast('شماره کوپ را وارد کنید.', 'error'); return null; }
+
+  const machines = state.reference?.machines || [];
+  const blades = state.reference?.blades || [];
+  const selectedMachine = machines.find((machine) => machine.id === cuttingForm.machineId);
+  if (!selectedMachine) { showToast('دستگاه برش را انتخاب کنید.', 'error'); return null; }
+
+  const matchedCoup = findCoupByNumber(state.reference?.coups || [], cuttingForm.coupNumber);
+  const type = matchedCoup ? matchedCoup.type : cuttingForm.manualType.trim();
+  if (!type) { showToast('نوع کوپ مشخص نیست. نوع را دستی انتخاب کنید.', 'error'); return null; }
+
+  return {
+    isoDate,
+    selectedMachine,
+    equippedBlade: blades.find((blade) => blade.machineId === selectedMachine.id) || null,
+    matchedCoup,
+    type,
+  };
+}
+
+function continueToUnloading() {
+  if (!getCuttingSetup()) return;
+  state.tab = 'unloading';
+  render();
 }
 
 function manualStamp(value) {
@@ -489,23 +527,12 @@ function manualStamp(value) {
 }
 
 async function submitCuttingForm() {
-  const isoDate = jalaliStringToIso(cuttingForm.date);
-  if (!isoDate) { showToast('تاریخ برش معتبر نیست.', 'error'); return; }
-  if (!cuttingForm.coupNumber.trim()) { showToast('شماره کوپ را وارد کنید.', 'error'); return; }
-
-  const machines = state.reference?.machines || [];
-  const blades = state.reference?.blades || [];
-  const selectedMachine = machines.find((m) => m.id === cuttingForm.machineId);
-  if (!selectedMachine) { showToast('دستگاه برش را انتخاب کنید.', 'error'); return; }
-  const equippedBlade = blades.find((b) => b.machineId === selectedMachine.id) || null;
-
-  const coups = state.reference?.coups || [];
-  const matchedCoup = findCoupByNumber(coups, cuttingForm.coupNumber);
-  const type = matchedCoup ? matchedCoup.type : cuttingForm.manualType.trim();
+  const setup = getCuttingSetup();
+  if (!setup) return;
+  const { isoDate, selectedMachine, equippedBlade, matchedCoup, type } = setup;
   const waybillNumber = matchedCoup ? matchedCoup.waybillNumber : cuttingForm.manualWaybill.trim();
   const approxWeight = matchedCoup ? matchedCoup.approxWeight : (cuttingForm.manualWeight === '' ? null : Number(cuttingForm.manualWeight));
   const coupFormat = matchedCoup ? matchedCoup.coupFormat : cuttingForm.manualFormat;
-  if (!type) { showToast('نوع کوپ مشخص نیست. نوع را دستی انتخاب کنید.', 'error'); return; }
 
   const filledSlabs = cuttingForm.slabs.filter((row) => !slabRowIsEmpty(row));
   const invalidSlab = filledSlabs.find((row) => !(Number(row.length) > 0) || !(Number(row.width) > 0) || !(Number(row.quantity) > 0));
@@ -592,9 +619,12 @@ function render() {
   const tabs = h('div', { class: 'tabs' }, [
     h('button', { class: `tab-btn ${state.tab === 'pallet' ? 'active' : ''}`, text: 'ثبت پالت', onclick: () => { state.tab = 'pallet'; render(); } }),
     h('button', { class: `tab-btn ${state.tab === 'cutting' ? 'active' : ''}`, text: 'ثبت برش', onclick: () => { state.tab = 'cutting'; render(); } }),
+    h('button', { class: `tab-btn ${state.tab === 'unloading' ? 'active' : ''}`, text: 'ثبت تخلیه', onclick: () => { state.tab = 'unloading'; render(); } }),
   ]);
 
-  const content = h('main', { id: 'tab-content' }, [state.tab === 'pallet' ? renderPalletTab() : renderCuttingTab()]);
+  const content = h('main', { id: 'tab-content' }, [
+    state.tab === 'pallet' ? renderPalletTab() : state.tab === 'cutting' ? renderCuttingTab() : renderUnloadingTab(),
+  ]);
 
   root.appendChild(topbar);
   root.appendChild(tabs);
