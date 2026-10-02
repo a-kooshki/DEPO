@@ -127,6 +127,8 @@ export default function ContractEntryTab() {
   setCtFormat,
   ctPrice,
   setCtPrice,
+  ctFreightPerTon,
+  setCtFreightPerTon,
   ctCoupCount,
   setCtCoupCount,
   editingContractId,
@@ -321,7 +323,12 @@ export default function ContractEntryTab() {
                   <Input type="number" numeric step="0.01" value={ctPrice} onChange={(e) => setCtPrice(e.target.value)} />
                 </Field>
               </div>
-              <div data-ct-field="6" onKeyDown={(e) => handleFlatEnter(e, 'data-ct-field', 6, 6, saveContract)}>
+              <div data-ct-field="6" onKeyDown={(e) => handleFlatEnter(e, 'data-ct-field', 6, 7)}>
+                <Field label="فی کرایه هر تن (ریال)" hint={ctFreightPerTon !== '' ? `${formatRial(ctFreightPerTon)} ریال` : undefined}>
+                  <Input type="number" numeric step="0.01" value={ctFreightPerTon} onChange={(e) => setCtFreightPerTon(e.target.value)} />
+                </Field>
+              </div>
+              <div data-ct-field="7" onKeyDown={(e) => handleFlatEnter(e, 'data-ct-field', 7, 7, saveContract)}>
                 <Field label="تعداد کوپ قرارداد">
                   <Input type="number" numeric step="1" min="1" value={ctCoupCount} onChange={(e) => setCtCoupCount(e.target.value)} />
                 </Field>

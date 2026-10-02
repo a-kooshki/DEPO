@@ -178,6 +178,8 @@ export default function WaybillEntryTab() {
   waybillQuery,
   setWaybillQuery,
   selectedContract,
+  wbFreightPerTon,
+  wbFreightAmount,
   handleContractSelect,
   updateCoupRow,
   addCoupRow,
@@ -324,6 +326,11 @@ export default function WaybillEntryTab() {
                   <Field label="وزن کل حواله (تن)">
                     <Input type="number" numeric step="0.01" value={wbTotalWeight} onChange={(e) => setWbTotalWeight(e.target.value)} />
                   </Field>
+                </div>
+                <div className="md:col-span-2 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm">
+                  <span className="text-[var(--text-muted)]">فی کرایه قرارداد: </span><span className="num font-semibold">{formatRial(wbFreightPerTon)} ریال/تن</span>
+                  <span className="mx-2 text-[var(--border-strong)]">|</span>
+                  <span className="text-[var(--text-muted)]">کرایه حواله: </span><span className="num font-semibold text-[var(--primary)]">{formatRial(wbFreightAmount)} ریال</span>
                 </div>
                 <div data-wb-field="6" onKeyDown={(e) => handleFlatEnter(e, 'data-wb-field', 6, 6, () => document.querySelector('[data-coup-row="0"][data-coup-field="0"] input')?.focus())}>
                   <Field label="نام معدن">

@@ -1189,6 +1189,27 @@ export default function StoneInventoryApp() {
     printDocument(html, `Waybill_${waybill.waybillNumber}`);
   };
 
+  const printWaybillReport = async () => {
+    if (filteredWaybills.length === 0) { notify('حواله‌ای برای چاپ وجود ندارد.', 'error'); return; }
+    const rows = filteredWaybills.map((waybill) => [
+      waybill.waybillNumber, isoToJalaliString(waybill.date), waybill.contractNumber || '—',
+      num(waybill.totalWeight), formatRial(waybill.freightPerTon || 0), formatRial(waybill.freightAmount || 0),
+    ]);
+    const totalWeight = filteredWaybills.reduce((sum, waybill) => sum + Number(waybill.totalWeight || 0), 0);
+    const totalFreight = filteredWaybills.reduce((sum, waybill) => sum + Number(waybill.freightAmount || 0), 0);
+    const html = buildPrintHtml({
+      title: 'Waybill Report',
+      subtitle: `${filteredWaybills.length} waybills — ${num(totalWeight)} ton — freight ${formatRial(totalFreight)} Rial`,
+      headers: ['Waybill', 'Date', 'Contract', 'Weight (ton)', 'Freight / ton', 'Total Freight'],
+      rows,
+      logoDataUrl: settings.showLogoInPdf ? await loadLogoDataUrl() : null,
+      qrDataUrl: settings.showQrInPdf ? await loadQrDataUrl() : null,
+      fontScale: settings.pdfFontScale,
+      headerText: settings.pdfHeaderText,
+    });
+    printDocument(html, `Waybill_Report_${new Date().toISOString().slice(0, 10)}`);
+  };
+
   const timingBoxHtml = (label, entry, fontScale = 1) => `
     <div style="flex:1;border:1px solid #000;border-radius:4px;padding:8px">
       <div style="font-weight:800;font-size:${Math.round(12 * fontScale)}px;border-bottom:1px solid #000;padding-bottom:4px;margin-bottom:8px">${escapeHtml(label)}</div>
@@ -1320,6 +1341,7 @@ export default function StoneInventoryApp() {
   const [ctStoneType, setCtStoneType] = useState('');
   const [ctFormat, setCtFormat] = useState('');
   const [ctPrice, setCtPrice] = useState('');
+  const [ctFreightPerTon, setCtFreightPerTon] = useState('');
   const [ctCoupCount, setCtCoupCount] = useState('');
   const [editingContractId, setEditingContractId] = useState(null);
   const [contractQuery, setContractQuery] = useState('');
@@ -1327,7 +1349,7 @@ export default function StoneInventoryApp() {
 
   const resetContractForm = () => {
     setCtNumber(''); setCtTonnage(''); setCtMine(''); setCtStoneType('');
-    setCtFormat(''); setCtPrice(''); setCtCoupCount(''); setEditingContractId(null);
+    setCtFormat(''); setCtPrice(''); setCtFreightPerTon(''); setCtCoupCount(''); setEditingContractId(null);
   };
 
   const saveContract = () => {
@@ -1341,6 +1363,7 @@ export default function StoneInventoryApp() {
     if (!ctStoneType) { notify('نوع سنگ را انتخاب کنید.', 'error'); return; }
     if (!ctFormat) { notify('فرمت کوپ قرارداد را انتخاب کنید.', 'error'); return; }
     if (!(Number(ctPrice) >= 0)) { notify('قیمت فی هر تن را وارد کنید.', 'error'); return; }
+    if (ctFreightPerTon === '' || !(Number(ctFreightPerTon) >= 0)) { notify('فی کرایه هر تن را وارد کنید.', 'error'); return; }
     if (!(Number(ctCoupCount) > 0)) { notify('تعداد کوپ قرارداد را وارد کنید.', 'error'); return; }
 
     const record = {
@@ -1352,6 +1375,7 @@ export default function StoneInventoryApp() {
       stoneType: ctStoneType,
       coupFormat: ctFormat,
       pricePerTon: Number(ctPrice),
+      freightPerTon: Number(ctFreightPerTon),
       coupCount: Number(ctCoupCount),
       createdAt: editingContractId ? contracts.find((c) => c.id === editingContractId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
     };
@@ -1368,6 +1392,7 @@ export default function StoneInventoryApp() {
     setCtStoneType(contract.stoneType);
     setCtFormat(contract.coupFormat);
     setCtPrice(String(contract.pricePerTon));
+    setCtFreightPerTon(String(contract.freightPerTon ?? 0));
     setCtCoupCount(String(contract.coupCount));
     setEditingContractId(contract.id);
     setActiveTab('contractEntry');
@@ -1482,6 +1507,8 @@ export default function StoneInventoryApp() {
   const [waybillQuery, setWaybillQuery] = useState('');
 
   const selectedContract = contractByNumber.get(wbContractNumber) || null;
+  const wbFreightPerTon = Number(selectedContract?.freightPerTon || 0);
+  const wbFreightAmount = Number((Number(wbTotalWeight || 0) * wbFreightPerTon).toFixed(2));
 
   const handleContractSelect = (contractNumber) => {
     setWbContractNumber(contractNumber);
@@ -1567,6 +1594,8 @@ export default function StoneInventoryApp() {
       id: editingWaybillId || `wb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       waybillNumber: number,
       totalWeight: Number(wbTotalWeight),
+      freightPerTon: wbFreightPerTon,
+      freightAmount: wbFreightAmount,
       driverName: wbDriver.trim(),
       plateNumber: wbPlate,
       mineName: wbMine.trim(),
@@ -2061,6 +2090,7 @@ export default function StoneInventoryApp() {
     metaGridHtml,
     printDocumentHeader,
     printWaybill,
+    printWaybillReport,
     timingBoxHtml,
     printCuttingForm,
     newStoneType,
@@ -2083,6 +2113,8 @@ export default function StoneInventoryApp() {
     setCtFormat,
     ctPrice,
     setCtPrice,
+    ctFreightPerTon,
+    setCtFreightPerTon,
     ctCoupCount,
     setCtCoupCount,
     editingContractId,
@@ -2134,6 +2166,8 @@ export default function StoneInventoryApp() {
     waybillQuery,
     setWaybillQuery,
     selectedContract,
+    wbFreightPerTon,
+    wbFreightAmount,
     handleContractSelect,
     updateCoupRow,
     addCoupRow,

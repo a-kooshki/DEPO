@@ -105,6 +105,7 @@ export default function WaybillListTab() {
   metaGridHtml,
   printDocumentHeader,
   printWaybill,
+  printWaybillReport,
   timingBoxHtml,
   printCuttingForm,
   newStoneType,
@@ -277,14 +278,25 @@ export default function WaybillListTab() {
   slabRowIsEmpty
   } = useAppContext();
 
+  const reportTotalWeight = filteredWaybills.reduce((sum, waybill) => sum + Number(waybill.totalWeight || 0), 0);
+  const reportTotalFreight = filteredWaybills.reduce((sum, waybill) => sum + Number(waybill.freightAmount || 0), 0);
+
   return (
     <>
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Stat label="حواله‌های نمایش‌داده‌شده" value={filteredWaybills.length} />
+        <Stat label="وزن کل" value={num(reportTotalWeight)} unit="تن" />
+        <Stat label="جمع کرایه" value={formatRial(reportTotalFreight)} unit="ریال" />
+      </div>
       <Card
             title="حواله‌ها"
             description="جستجو، ویرایش، چاپ و حذف حواله‌های ثبت‌شده."
             actions={
-              <div className="w-60">
-                <Input value={waybillQuery} onChange={(e) => setWaybillQuery(e.target.value)} placeholder="جستجو: شماره حواله، راننده، معدن، کوپ…" />
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <div className="w-60">
+                  <Input value={waybillQuery} onChange={(e) => setWaybillQuery(e.target.value)} placeholder="جستجو: شماره حواله، راننده، معدن، کوپ…" />
+                </div>
+                <Button variant="secondary" size="sm" onClick={printWaybillReport} disabled={filteredWaybills.length === 0}>چاپ گزارش</Button>
               </div>
             }
           >
@@ -313,6 +325,8 @@ export default function WaybillListTab() {
                       <div>پلاک: <span className="num text-[var(--text)]">{waybill.plateNumber || '—'}</span></div>
                       <div>معدن: <span className="text-[var(--text)]">{waybill.mineName || '—'}</span></div>
                       <div>قرارداد: <span className="num text-[var(--text)]">{waybill.contractNumber || '—'}</span></div>
+                      <div>فی کرایه: <span className="num text-[var(--text)]">{formatRial(waybill.freightPerTon || 0)} ریال/تن</span></div>
+                      <div>کرایه حواله: <span className="num font-semibold text-[var(--primary)]">{formatRial(waybill.freightAmount || 0)} ریال</span></div>
                     </div>
                     <div className="overflow-x-auto px-4 pb-4">
                       <table className="w-full min-w-[680px] text-sm">
