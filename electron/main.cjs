@@ -410,6 +410,14 @@ async function handleApiRequest(req, res, pathname) {
     return;
   }
 
+  if (req.method === 'GET' && pathname.startsWith('/api/pallets/')) {
+    const palletNumber = decodeURIComponent(pathname.slice('/api/pallets/'.length));
+    const stones = store.stones.filter((stone) => stone.palletNumber === palletNumber);
+    if (stones.length === 0) { sendJson(res, 404, { error: 'پالت پیدا نشد.' }); return; }
+    sendJson(res, 200, { palletNumber, stones });
+    return;
+  }
+
   if (req.method === 'GET' && pathname === '/api/events') {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream; charset=utf-8',

@@ -47,6 +47,8 @@ const palletForm = {
   rows: [createEntryRow()],
   submitting: false,
   lastSaved: null,
+  editingPalletNumber: null,
+  invoiceNumber: '',
 };
 
 const cuttingForm = {
@@ -146,14 +148,16 @@ function renderPalletTab() {
   const matchedCoup = findCoupByNumber(coups, header.cutCode);
 
   const headerCard = h('div', { class: 'card' }, [
-    h('h2', { text: 'مشخصات پالت' }),
+    h('h2', { text: palletForm.editingPalletNumber ? `ویرایش پالت ${palletForm.editingPalletNumber}` : 'مشخصات پالت' }),
+    palletForm.editingPalletNumber ? h('p', { class: 'hint', style: 'color:var(--accent)', text: 'اطلاعات ثبت‌شده بارگذاری شده است. تغییرات را ویرایش و ذخیره کنید.' }) : null,
+    palletForm.editingPalletNumber ? h('button', { class: 'secondary', text: 'لغو ویرایش پالت', onclick: cancelPalletEdit }) : null,
     h('p', { class: 'hint', text: 'این مشخصات برای ردیف‌های تازه اعمال می‌شود؛ ردیف‌هایی که قبلاً پر شده‌اند تغییر نمی‌کنند.' }),
     h('div', { class: 'field' }, [
       h('label', { text: 'شماره پالت' }),
       h('input', {
-        value: header.palletNumber, inputmode: 'text', placeholder: 'A-123',
+        value: header.palletNumber, inputmode: 'text', placeholder: 'A-123', disabled: palletForm.editingPalletNumber ? true : null,
         oninput: (e) => { header.palletNumber = normalizePalletInput(e.target.value); e.target.value = header.palletNumber; },
-        onblur: (e) => { header.palletNumber = formatPallet(header.palletNumber) || header.palletNumber; e.target.value = header.palletNumber; },
+        onblur: (e) => { header.palletNumber = formatPallet(header.palletNumber) || header.palletNumber; e.target.value = header.palletNumber; loadExistingPallet(header.palletNumber); },
       }),
     ]),
     h('div', { class: 'grid-2' }, [
@@ -252,7 +256,7 @@ function renderPalletTab() {
     h('button', { class: 'add-row-btn', text: '+ افزودن ردیف', onclick: () => { palletForm.rows.push(createEntryRow()); renderPalletTabInPlace(); } }),
     h('p', { class: 'hint', text: `مساحت کل: ${num(totalArea)} m²` }),
     h('button', {
-      class: 'primary', text: palletForm.submitting ? 'در حال ثبت…' : 'ثبت پالت', disabled: palletForm.submitting,
+      class: 'primary', text: palletForm.submitting ? 'در حال ذخیره…' : palletForm.editingPalletNumber ? 'ذخیره تغییرات پالت' : 'ثبت پالت', disabled: palletForm.submitting,
       onclick: submitPallet,
     }),
   ]);
@@ -273,6 +277,53 @@ function renderPalletTab() {
 function renderPalletTabInPlace() {
   const container = document.getElementById('tab-content');
   if (container) container.replaceChildren(renderPalletTab());
+}
+
+function cancelPalletEdit() {
+  palletForm.editingPalletNumber = null;
+  palletForm.invoiceNumber = '';
+  palletForm.header = { palletNumber: '', type: palletForm.header.type, cutCode: '', grade: palletForm.header.grade };
+  palletForm.rows = [createEntryRow()];
+  renderPalletTabInPlace();
+}
+
+async function loadExistingPallet(palletNumber) {
+  if (!palletNumber || palletNumber === palletForm.editingPalletNumber) return;
+  try {
+    const response = await fetch(`/api/pallets/${encodeURIComponent(palletNumber)}`);
+    if (response.status === 404) return;
+    if (!response.ok) throw new Error('bad status');
+    const { stones } = await response.json();
+    if (!Array.isArray(stones) || stones.length === 0) return;
+
+    const first = stones[0];
+    palletForm.editingPalletNumber = palletNumber;
+    palletForm.invoiceNumber = first.invoiceNumber || '';
+    palletForm.header = {
+      palletNumber,
+      type: first.type || '',
+      cutCode: String(first.cutCode ?? ''),
+      grade: first.grade || '',
+    };
+    palletForm.rows = stones.map((stone) => ({
+      ...createEntryRow(),
+      specLocked: true,
+      type: stone.type || '',
+      cutCode: String(stone.cutCode ?? ''),
+      grade: stone.grade || '',
+      thickness: stone.thickness ? String(Number((Number(stone.thickness) * 100).toFixed(2))) : '',
+      length: stone.length ?? '',
+      width: stone.width ?? '',
+      quantity: String(stone.quantity ?? 1),
+      notes: stone.notes || '',
+      lengthInMeters: true,
+      widthInMeters: true,
+    }));
+    renderPalletTabInPlace();
+    showToast(`پالت ${palletNumber} برای ویرایش بارگذاری شد.`, 'success');
+  } catch {
+    showToast('دریافت اطلاعات پالت ناموفق بود. اتصال شبکه را بررسی کنید.', 'error');
+  }
 }
 
 async function submitPallet() {
@@ -301,7 +352,7 @@ async function submitPallet() {
       cutCode: spec.cutCode,
       grade: spec.grade,
       notes: row.notes,
-      invoiceNumber: '',
+      invoiceNumber: palletForm.invoiceNumber || '',
       thickness: String(row.thickness).trim() === '' ? 0 : Number(row.thickness) / 100,
       length,
       width,
@@ -312,14 +363,17 @@ async function submitPallet() {
     };
   });
 
+  const editingPalletNumber = palletForm.editingPalletNumber;
   palletForm.submitting = true;
   renderPalletTabInPlace();
   try {
-    await postJson('/api/pallets', { palletNumber: pallet, stones: newStones });
+    await postJson('/api/pallets', { palletNumber: pallet, editingPalletNumber, stones: newStones });
     palletForm.lastSaved = { palletNumber: pallet, count: newStones.length, area: newStones.reduce((s, x) => s + x.area, 0) };
     palletForm.header = { palletNumber: '', type: palletForm.header.type, cutCode: '', grade: palletForm.header.grade };
     palletForm.rows = [createEntryRow()];
-    showToast(`پالت ${pallet} با ${newStones.length} ردیف ثبت شد.`, 'success');
+    palletForm.editingPalletNumber = null;
+    palletForm.invoiceNumber = '';
+    showToast(editingPalletNumber ? `پالت ${pallet} به‌روزرسانی شد.` : `پالت ${pallet} با ${newStones.length} ردیف ثبت شد.`, 'success');
   } catch (error) {
     showToast(error.message, 'error');
   } finally {

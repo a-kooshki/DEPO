@@ -293,8 +293,13 @@ export default function EntryTab() {
                     data-header-field="pallet"
                     value={headerPallet}
                     onChange={(e) => setHeaderPallet(normalizePalletInput(e.target.value))}
-                    onBlur={() => setHeaderPallet((prev) => formatPallet(prev) || prev)}
+                    onBlur={() => {
+                      const pallet = formatPallet(headerPallet);
+                      setHeaderPallet(pallet || headerPallet);
+                      if (pallet && pallet !== editingPallet && stones.some((stone) => stone.palletNumber === pallet)) editPallet(pallet);
+                    }}
                     placeholder="A-123"
+                    disabled={Boolean(editingPallet)}
                     className="num text-center font-semibold"
                     autoFocus
                   />
